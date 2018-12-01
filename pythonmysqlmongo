@@ -1,0 +1,49 @@
+import pymongo
+import MySQLdb
+from datetime import date
+from datetime import datetime
+
+def mySqlConnectionPrivider():
+    # Open database connection
+    conn = MySQLdb.connect("localhost", "root", "Root@1234", "spreadcr_testbcpm")
+    cur = conn.cursor()
+    return cur,conn
+
+
+def mongoDbConnectionProvider():
+    myclient = pymongo.MongoClient("mongodb://localhost:27017/")
+    mydb = myclient["spreadcr_nhm_db"]
+    return mydb
+
+myMongoDB=mongoDbConnectionProvider()
+
+#get Mysql db connection
+cur,conn=mySqlConnectionPrivider()
+cur.execute("show  tables");
+results=cur.fetchall()
+
+index=0
+for val in results:
+    if(index>3):
+         sql="select *  from "+val[0]
+         print sql
+         myCols=myMongoDB[val[0]]
+         cur.execute(sql)
+         index += 1
+         tabresults=cur.fetchall()
+         field_names = [i[0] for i in cur.description]
+         for row in tabresults:
+             jsondisctornary = {}
+             gov = 0
+             for cols in field_names:
+                 if (type(row[gov + 1]) is date):
+                     jsondisctornary[cols] = str(row[gov + 1])
+                 else:
+                     jsondisctornary[cols] = row[gov + 1]
+
+                     myCols.insert(jsondisctornary)
+
+    else :
+        index += 1
+
+
